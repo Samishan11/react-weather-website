@@ -13,6 +13,7 @@
     "@react-jvectormap/core": "^1.0.4",
     "@react-jvectormap/world": "^1.1.2",
     "@types/leaflet": "^1.9.3",
+    "axios": "^1.4.0",
     "leaflet": "^1.9.3",
     "leaflet-css": "^0.1.0",
     "react": "^18.2.0",

@@ -14,6 +14,27 @@
   left: 0;
 }
 
+/* Add your desired styles based on weather conditions */
+.map-container.weather-rain {
+  background-color: blue;
+}
+
+.map-container.weather-clear {
+  background-color: yellow;
+}
+
+.map-container.weather-cloud {
+  background-color: gray;
+}
+
+.map-container.weather-snow {
+  background-color: white;
+}
+
+.map-container.weather-default {
+  background-color: #eaeaea;
+}
+
 @media (max-width: 768px) {
   .map-container {
     height: 300px;
