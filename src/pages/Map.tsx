@@ -23,7 +23,7 @@ const Map: React.FC<Center> =  ({ lat, lon }: Center)  => {
         console.error("Error getting current location:", error);
       }
     );
-  }, [weatherData]);
+  }, []);
 
   const fetchWeather = async () => {
     try {
@@ -31,12 +31,12 @@ const Map: React.FC<Center> =  ({ lat, lon }: Center)  => {
       const response = await axios.get(
         `https://api.openweathermap.org/data/2.5/group?id=524901,703448,2643743&units=metric&appid=${API_KEY}`
       );
-      setWeatherData(response.data);
+      setWeatherData(response.data.list);
+      console.log(response.data)
     } catch (error) {
       console.error("Error fetching weather data:", error);
     }
   };
-  console.log(weatherData)
 
   useEffect(()=>{
     fetchWeather()
@@ -59,15 +59,10 @@ const Map: React.FC<Center> =  ({ lat, lon }: Center)  => {
   };
   return (
     <div className="map-container">
-      <MapContainer
-        center={[0, 0]}
-        zoom={2}
-        style={{ width: "100%", height: "100%" }}
-        className={getWeatherClass(weatherData[0]?.weather[0]?.description)}
-      >
+      <MapContainer center={[0, 0]} zoom={2} style={{ width: "100%", height: "100%" }}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        { weatherData?.length > 0 && weatherData?.map((data: any) => (
-          <Marker key={data.id} position={[data.coord.lat, data.coord.lon]}>
+        {weatherData?.length > 0 && weatherData?.map((data: any) => (
+          <Marker key={data.id} position={center}>
             <Popup>
               <div>
                 <h3>{data.name}</h3>
@@ -78,6 +73,14 @@ const Map: React.FC<Center> =  ({ lat, lon }: Center)  => {
           </Marker>
         ))}
       </MapContainer>
+      <div className="map-legend">
+        { weatherData?.length > 0 && weatherData?.map((data: any) => (
+          console.log(data?.weather[0]?.description),
+          <span key={data.id} className={`legend-item ${getWeatherClass(data?.weather[0]?.description)}`}>
+            {data.name}
+          </span>
+        ))}
+      </div>
     </div>
   );
 };
