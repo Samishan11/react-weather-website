@@ -7,5 +7,5 @@ export const store = configureStore({
     reducer: reducer,
     devTools: true,
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(apiSlice.middleware),
-  });
+        getDefaultMiddleware().concat(apiSlice.middleware),
+});

@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { useGetWeatherQuery } from "../redux/apiSlice";
+import { useGetCountryQuery, useGetWeatherQuery } from "../redux/apiSlice";
 
 const Map: React.FC = () => {
-  const [center, setCenter] = useState<[number, number]>([0, 0]);
-  const { isLoading, data } = useGetWeatherQuery({});
+  const [filter, setFilter] = useState({})
 
+  // 
+  const [center, setCenter] = useState<[number, number]>([0, 0]);
+  const [countryCodes, setCountryCodes] = useState<string[]>([]);
+  const { isLoading, data } = useGetWeatherQuery(filter);
+  const { isLoading: lodingCountry, data: countryData } = useGetCountryQuery({});
   useEffect(() => {
     if (!isLoading) {
       navigator.geolocation.getCurrentPosition(
@@ -20,6 +24,17 @@ const Map: React.FC = () => {
       );
     }
   }, [isLoading]);
+
+  useEffect(() => {
+    if (!lodingCountry) {
+      const codes = countryData.map((country: any) => country.latlng);
+      console.log(countryData)
+      setCountryCodes(codes)
+      setFilter({
+        lat: codes
+      })
+    }
+  }, [countryData]);
 
   const getWeatherClass = (weather: string): string => {
     if (weather) {
@@ -43,8 +58,6 @@ const Map: React.FC = () => {
         <MapContainer center={[0, 0]} zoom={2} style={{ width: "100%", height: "100%" }}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-          {console.log(data)}
-          {console.log(center)}
           {data?.list?.length > 0 && data?.list?.map((data: any) => (
             <Marker position={center}>
               <Popup>
