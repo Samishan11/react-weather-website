@@ -2,17 +2,33 @@ import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useGetCountryQuery, useGetWeatherQuery } from "../redux/apiSlice";
+import axios from "axios";
+
+
+const cityIds = [
+  2643743,   // London, United Kingdom
+  5128581,   // New York, United States
+  1850147,   // Tokyo, Japan
+  2968815,   // Paris, France
+  2147714    // Sydney, Australia
+];
 
 const Map: React.FC = () => {
-  const [filter, setFilter] = useState({})
 
-  // 
+  // states
+  const [filter, setFilter] = useState({})
   const [center, setCenter] = useState<[number, number]>([0, 0]);
   const [countryCodes, setCountryCodes] = useState<string[]>([]);
-  const { isLoading, data } = useGetWeatherQuery(filter);
+  const [isLoading, setIsLoding] = useState<Boolean>(false);
+
+  // rtk query
   const { isLoading: lodingCountry, data: countryData } = useGetCountryQuery({});
+  const { isLoading: loadingWeather, data: weathers } = useGetWeatherQuery({ cityId: cityIds.join(",") });
+  console.log(weathers)
+  // hooks 
+
   useEffect(() => {
-    if (!isLoading) {
+    if (!loadingWeather) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
@@ -23,18 +39,19 @@ const Map: React.FC = () => {
         }
       );
     }
-  }, [isLoading]);
+  }, [loadingWeather]);
 
   useEffect(() => {
     if (!lodingCountry) {
       const codes = countryData.map((country: any) => country.latlng);
-      console.log(countryData)
       setCountryCodes(codes)
       setFilter({
         lat: codes
       })
     }
   }, [countryData]);
+
+  // methods 
 
   const getWeatherClass = (weather: string): string => {
     if (weather) {
@@ -53,12 +70,12 @@ const Map: React.FC = () => {
 
   return (
 
-    !isLoading ?
+    !loadingWeather ?
       <div className="map-container">
         <MapContainer center={[0, 0]} zoom={2} style={{ width: "100%", height: "100%" }}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-          {data?.list?.length > 0 && data?.list?.map((data: any) => (
+          {weathers?.list?.length > 0 && weathers?.list?.map((data: any) => (
             <Marker position={center}>
               <Popup>
                 <div>
@@ -71,8 +88,7 @@ const Map: React.FC = () => {
           ))}
         </MapContainer>
         <div className="map-legend">
-          {!isLoading && data?.length > 0 && data?.map((data: any) => (
-            console.log(data?.weather[0]?.description),
+          {!loadingWeather && weathers?.length > 0 && weathers?.list?.map((data: any) => (
             <span key={data.id} className={`legend-item ${getWeatherClass(data?.weather[0]?.description)}`}>
               {data.name}
             </span>

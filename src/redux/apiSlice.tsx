@@ -2,19 +2,17 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
 // Define a service using a base URL and expected endpoints
 const API_KEY = "1c5d8a607c8ec51b649bdd2ce052e5ff";
-const idArray = [524901, 703448, 2643743]; // Example array of IDs
-
-const idList = idArray.join(',');
 
 export const apiSlice = createApi({
     reducerPath: 'weather',
     baseQuery: fetchBaseQuery({ baseUrl: '' }),
     tagTypes: ["Weather", "Country"],
     endpoints: (build) => ({
-        getWeather: build.query({
-            query: () => {
+        getWeather: build.query<any, { cityId: string }>({
+            query: ({ cityId }) => {
+                console.log(cityId)
                 return {
-                    url: `https://api.openweathermap.org/data/2.5/group?id=${idList}&units=metric&appid=${API_KEY}`
+                    url: `https://api.openweathermap.org/data/2.5/group?id=${cityId}&appid=${API_KEY}`
                 };
             },
             providesTags: (result, error) => [{ type: "Weather" }, { type: "Weather" }],
