@@ -10,7 +10,6 @@ export const apiSlice = createApi({
     endpoints: (build) => ({
         getWeather: build.query<any, { cityId: string }>({
             query: ({ cityId }) => {
-                console.log(cityId)
                 return {
                     url: `https://api.openweathermap.org/data/2.5/group?id=${cityId}&appid=${API_KEY}`
                 };

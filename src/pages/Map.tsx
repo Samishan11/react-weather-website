@@ -11,13 +11,13 @@ const cityIds = [
   5128581,   // New York, United States
   1850147,   // Tokyo, Japan
   2968815,   // Paris, France
-  2147714    // Sydney, Australia
+  2147714,  // Sydney, Australia
+  1283240  // katmandu
 ];
 
 const Map: React.FC = () => {
 
   const [center, setCenter] = useState<[number, number]>([0, 0]);
-
   const { isLoading: loadingWeather, data: weathers } = useGetWeatherQuery({ cityId: cityIds.join(",") });
 
   useEffect(() => {
@@ -82,15 +82,19 @@ const Map: React.FC = () => {
         <MapContainer center={[0, 0]} zoom={2} style={{ width: "100%", height: "100%" }}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           {weathers?.list?.length > 0 && weathers?.list?.map((data: any) => (
-            <Marker key={data.id} position={[data.coord.lat, data.coord.lon]}  >
-              <Popup className={getWeatherClass(data.weather[0].main)}>
-                <div>
-                  <h3>{data.name}</h3>
-                  <p>Temperature: {data.main.temp}°C</p>
-                  <p>Humidity: {data.main.humidity}%</p>
-                </div>
-              </Popup>
-            </Marker>
+            Math.round(center[0]) === Math.round(data.coord.lat) && Math.round(center[1]) === Math.round(data.coord.lon) && (
+              <div style={{ background: "red" }}>
+                <Marker key={data.id} position={[data.coord.lat, data.coord.lon]}>
+                  <Popup className={getWeatherClass(data.weather[0].main)}>
+                    <div>
+                      <h3>{data.name}</h3>
+                      <p>Temperature: {data.main.temp}°C</p>
+                      <p>Humidity: {data.main.humidity}%</p>
+                    </div>
+                  </Popup>
+                </Marker>
+              </div>
+            )
           ))}
         </MapContainer>
 
