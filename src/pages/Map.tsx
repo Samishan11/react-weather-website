@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useGetCountryQuery, useGetWeatherQuery } from "../redux/apiSlice";
-import axios from "axios";
-
+import L from "leaflet";
+import "leaflet/dist/images/marker-icon-2x.png";
+import { Icon } from "leaflet";
 
 const cityIds = [
   2643743,   // London, United Kingdom
@@ -15,17 +16,9 @@ const cityIds = [
 
 const Map: React.FC = () => {
 
-  // states
-  const [filter, setFilter] = useState({})
   const [center, setCenter] = useState<[number, number]>([0, 0]);
-  const [countryCodes, setCountryCodes] = useState<string[]>([]);
-  const [isLoading, setIsLoding] = useState<Boolean>(false);
 
-  // rtk query
-  const { isLoading: lodingCountry, data: countryData } = useGetCountryQuery({});
   const { isLoading: loadingWeather, data: weathers } = useGetWeatherQuery({ cityId: cityIds.join(",") });
-  console.log(weathers)
-  // hooks 
 
   useEffect(() => {
     if (!loadingWeather) {
@@ -41,32 +34,46 @@ const Map: React.FC = () => {
     }
   }, [loadingWeather]);
 
-  useEffect(() => {
-    if (!lodingCountry) {
-      const codes = countryData.map((country: any) => country.latlng);
-      setCountryCodes(codes)
-      setFilter({
-        lat: codes
-      })
-    }
-  }, [countryData]);
-
   // methods 
 
+  // const weatherIcon = (weather: string): L.Icon => {
+  //   let iconUrl = "";
+
+  //   if (weather.includes("rain")) {
+  //     iconUrl = "/rain-marker-icon.png";
+  //   } else if (weather.includes("clear")) {
+  //     iconUrl = "/clear-marker-icon.png";
+  //   } else if (weather.includes("cloud")) {
+  //     iconUrl = "/cloud-marker-icon.png";
+  //   } else if (weather.includes("snow")) {
+  //     iconUrl = "/snow-marker-icon.png";
+  //   } else {
+  //     iconUrl = "/default-marker-icon.png";
+  //   }
+
+  //   return new L.Icon({
+  //     iconUrl,
+  //     iconSize: [25, 41],
+  //     iconAnchor: [12, 41],
+  //     popupAnchor: [1, -34],
+  //     shadowSize: [41, 41],
+  //   });
+  // };
   const getWeatherClass = (weather: string): string => {
-    if (weather) {
-      if (weather.includes("rain")) {
-        return "weather-rain";
-      } else if (weather.includes("clear")) {
-        return "weather-clear";
-      } else if (weather.includes("cloud")) {
-        return "weather-cloud";
-      } else if (weather.includes("snow")) {
-        return "weather-snow";
-      }
+    if (weather.includes("rain")) {
+      return "weather-rain";
+    } else if (weather.includes("clear")) {
+      return "weather-clear";
+    } else if (weather.includes("cloud")) {
+      return "weather-cloud";
+    } else if (weather.includes("snow")) {
+      return "weather-snow";
     }
     return "weather-default";
   };
+  // 
+
+
 
   return (
 
@@ -74,10 +81,9 @@ const Map: React.FC = () => {
       <div className="map-container">
         <MapContainer center={[0, 0]} zoom={2} style={{ width: "100%", height: "100%" }}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
           {weathers?.list?.length > 0 && weathers?.list?.map((data: any) => (
-            <Marker position={center}>
-              <Popup>
+            <Marker key={data.id} position={[data.coord.lat, data.coord.lon]}  >
+              <Popup className={getWeatherClass(data.weather[0].main)}>
                 <div>
                   <h3>{data.name}</h3>
                   <p>Temperature: {data.main.temp}°C</p>
@@ -87,13 +93,7 @@ const Map: React.FC = () => {
             </Marker>
           ))}
         </MapContainer>
-        <div className="map-legend">
-          {!loadingWeather && weathers?.length > 0 && weathers?.list?.map((data: any) => (
-            <span key={data.id} className={`legend-item ${getWeatherClass(data?.weather[0]?.description)}`}>
-              {data.name}
-            </span>
-          ))}
-        </div>
+
       </div> :
       <p>Loading...</p>
 

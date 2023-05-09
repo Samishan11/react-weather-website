@@ -40,3 +40,23 @@
     height: 300px;
   }
 }
+
+.leaflet-marker-icon.weather-rain {
+  background-color: blue;
+}
+
+.leaflet-marker-icon.weather-clear {
+  background-color: yellow;
+}
+
+.leaflet-marker-icon.weather-cloud {
+  background-color: gray;
+}
+
+.leaflet-marker-icon.weather-snow {
+  background-color: white;
+}
+
+.leaflet-marker-icon.weather-default {
+  background-color: green;
+}
