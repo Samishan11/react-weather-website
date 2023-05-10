@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, GeoJSON, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useGetCountryQuery, useGetWeatherQuery } from "../redux/apiSlice";
-import L from "leaflet";
 import "leaflet/dist/images/marker-icon-2x.png";
-import { Icon } from "leaflet";
 import countryData from "../data/countries.json";
 
 const cityIds = [
@@ -24,7 +22,6 @@ const Map: React.FC = () => {
   const [center, setCenter] = useState<[number, number]>([0, 0]);
   const { isLoading: loadingWeather, data: weathers } = useGetWeatherQuery({ cityId: cityIds.join(",") });
   const { isLoading: loadingCountry, data: countryDataResponse } = useGetCountryQuery([]);
-  console.log(countryDataResponse)
   useEffect(() => {
     if (!loadingWeather) {
       navigator.geolocation.getCurrentPosition(
@@ -39,43 +36,20 @@ const Map: React.FC = () => {
     }
   }, [loadingWeather]);
 
-  // const getCountryStyle = (countryCode: string): CountryStyle => {
-  //   const weather = weathers?.list?.find((data: any) => data.sys.country === countryCode);
-  //   if (weather) {
-  //     const weatherMain = weather.weather[0].main.toLowerCase();
-
-  //     switch (weatherMain) {
-  //       case "rain":
-  //         return { fillColor: "red" };
-  //       case "clear":
-  //         return { fillColor: "blue" };
-  //       case "clouds":
-  //         return { fillColor: "gray" };
-  //       case "snow":
-  //         return { fillColor: "white" };
-  //       default:
-  //         return { fillColor: "lightgray" };
-  //     }
-  //   }
-
-  //   return { fillColor: "lightgray" };
-  // };
-
   const getCountryStyle = (countryCode: string): CountryStyle => {
-    console.log(countryCode)
-    const country = countryDataResponse?.find((data: any) => data.cca2 === countryCode);
+    const country = countryDataResponse?.find((data: any) => data.cca3 === countryCode);
     if (country) {
-      const weather = weathers?.list?.find((data: any) => data.sys.country === countryCode);
+      const weather = weathers?.list?.find((data: any) => data.sys.country === countryCode.slice(0, -1));
       if (weather) {
         const weatherMain = weather.weather[0].main.toLowerCase();
-
+        console.log(weatherMain)
         switch (weatherMain) {
           case "rain":
             return { fillColor: "red" };
           case "clear":
-            return { fillColor: "blue" };
+            return { fillColor: "yellow" };
           case "clouds":
-            return { fillColor: "gray" };
+            return { fillColor: " red" };
           case "snow":
             return { fillColor: "white" };
           default:
@@ -86,48 +60,35 @@ const Map: React.FC = () => {
 
     return { fillColor: "lightgray" };
   };
+  // zoom to location
+  const ZoomToLocation: React.FC = () => {
+    const map = useMap();
 
-  // const getWeatherClass = (weather: string): string => {
-  //   if (weather.includes("rain")) {
-  //     return "weather-rain";
-  //   } else if (weather.includes("clear")) {
-  //     return "weather-clear";
-  //   } else if (weather.includes("cloud")) {
-  //     return "weather-cloud";
-  //   } else if (weather.includes("snow")) {
-  //     return "weather-snow";
-  //   }
-  //   return "weather-default";
-  // };
-  // 
+    useEffect(() => {
+      if (center[0] !== 0 && center[1] !== 0) {
+        map.flyTo(center, 10, {
+          duration: 2,
+        });
+      }
+    }, [center, map]);
+
+    return null;
+  };
+
 
   // 
   return (
-    // <div className="map-container">
-    //   {loadingWeather ? (
-    //     <p>Loading...</p>
-    //   ) : (
-    //     <MapContainer center={center} zoom={2} style={{ width: "100%", height: "100%" }}>
-    //       <TileLayer attribution="OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
-    //       <GeoJSON
-    //         data={countryData}
-    //         style={(feature) => getCountryStyle(feature?.properties?.cca2)}
-    //       />
-    //     </MapContainer>
-    //   )}
-    // </div>
     !loadingWeather ?
       <div className="map-container">
         <MapContainer center={[0, 0]} zoom={2} style={{ width: "100%", height: "100%" }}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <ZoomToLocation />
           <GeoJSON data={countryData} style={(features) => getCountryStyle(features?.properties?.ISO_A3)} />
           {weathers?.list?.length > 0 && weathers?.list?.map((data: any) => (
 
             Math.round(center[0]) === Math.round(data.coord.lat) && Math.round(center[1]) === Math.round(data.coord.lon) && (
               <div style={{ background: "red" }}>
                 <Marker key={data.id} position={[data.coord.lat, data.coord.lon]}>
-                  {/* <Popup className={getWeatherClass(data.weather[0].main)}> */}
                   <Popup >
                     <div>
                       <h3>{data.name}</h3>
