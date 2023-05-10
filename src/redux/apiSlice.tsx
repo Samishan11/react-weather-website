@@ -19,7 +19,7 @@ export const apiSlice = createApi({
         getCountry: build.query({
             query: () => {
                 return {
-                    url: `https://restcountries.com/v2/all`
+                    url: `https://restcountries.com/v3.1/all`
                 };
             },
             providesTags: (result, error) => [{ type: "Country" }, { type: "Country" }],

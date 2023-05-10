@@ -23,8 +23,8 @@
   background-color: yellow;
 }
 
-.map-container.weather-cloud {
-  background-color: gray;
+.weather-cloud {
+  /* background-color: gray; */
 }
 
 .map-container.weather-snow {
