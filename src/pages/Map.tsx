@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap, useLeafletContext } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useGetCountryQuery, useGetWeatherQuery } from "../redux/apiSlice";
 import "leaflet/dist/images/marker-icon-2x.png";
 import countryData from "../data/countries.json";
+import { Control, LatLngBounds } from 'leaflet';
+import L from 'leaflet';
 
 const cityIds = [
   2643743,   // London, United Kingdom
@@ -11,7 +13,23 @@ const cityIds = [
   1850147,   // Tokyo, Japan
   2968815,   // Paris, France
   2147714,   // Sydney, Australia
-  1283240    // Kathmandu, Nepal
+  1283240,  // Kathmandu, Nepal
+  1273294,
+  1185241,
+  1138958,  // Kabul, Afghanistan
+  174982,   // Tirana, Albania
+  2507480,  // Algiers, Algeria
+  3041563,  // Andorra la Vella, Andorra
+  3351879,  // Luanda, Angola
+  3865483,  // Buenos Aires, Argentina
+  2950159,  // Vienna, Austria
+  587084,   // Baku, Azerbaijan
+  1215502,  // Nassau, Bahamas
+  130758,   // Ljubljana, Slovenia
+  // 3661563,  // Honiara, Solomon Islands
+  // 51537,    // Mogadishu, Somalia
+  // 953987,   // Pretoria, South Africa
+  // 3669881   // Madrid, Spain
 ];
 
 interface CountryStyle {
@@ -19,9 +37,24 @@ interface CountryStyle {
 }
 
 const Map: React.FC = () => {
+
+  const southWest = { lat: 100, lng: -10 }; // Replace with your desired south-west coordinate
+  const northEast = { lat: 60, lng: 60 }; // Replace with your desired north-east coordinate
+  const bounds = new LatLngBounds(southWest, northEast);
+
+  const SetBounds = () => {
+    const map = useMap();
+    map.setMaxBounds(bounds);
+    return null;
+  };
+
+  // 
   const [center, setCenter] = useState<[number, number]>([0, 0]);
+
+  // 
   const { isLoading: loadingWeather, data: weathers } = useGetWeatherQuery({ cityId: cityIds.join(",") });
   const { isLoading: loadingCountry, data: countryDataResponse } = useGetCountryQuery([]);
+
   useEffect(() => {
     if (!loadingWeather) {
       navigator.geolocation.getCurrentPosition(
@@ -36,22 +69,24 @@ const Map: React.FC = () => {
     }
   }, [loadingWeather]);
 
+  // methods
   const getCountryStyle = (countryCode: string): CountryStyle => {
     const country = countryDataResponse?.find((data: any) => data.cca3 === countryCode);
     if (country) {
       const weather = weathers?.list?.find((data: any) => data.sys.country === countryCode.slice(0, -1));
       if (weather) {
         const weatherMain = weather.weather[0].main.toLowerCase();
-        console.log(weatherMain)
         switch (weatherMain) {
           case "rain":
             return { fillColor: "red" };
           case "clear":
             return { fillColor: "yellow" };
           case "clouds":
-            return { fillColor: " red" };
+            return { fillColor: " #000" };
           case "snow":
             return { fillColor: "white" };
+          case "haze":
+            return { fillColor: "#FD0000" };
           default:
             return { fillColor: "lightgray" };
         }
@@ -63,11 +98,10 @@ const Map: React.FC = () => {
   // zoom to location
   const ZoomToLocation: React.FC = () => {
     const map = useMap();
-
     useEffect(() => {
       if (center[0] !== 0 && center[1] !== 0) {
-        map.flyTo(center, 10, {
-          duration: 2,
+        map.flyTo(center, 8, {
+          duration: 3,
         });
       }
     }, [center, map]);
@@ -76,12 +110,14 @@ const Map: React.FC = () => {
   };
 
 
-  // 
+
   return (
     !loadingWeather ?
-      <div className="map-container">
-        <MapContainer center={[0, 0]} zoom={2} style={{ width: "100%", height: "100%" }}>
-          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <div className="map-container" style={{ width: "100%", height: "100%", overflow: "hidden" }}>
+        <MapContainer scrollWheelZoom={false} style={{ width: "100%", height: "100%", overflow: "hidden" }} center={[0, 0]} zoom={2} >
+          {/* <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?lang=en" /> */}
+          <TileLayer url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png' />
+          {/* <SetBounds /> */}
           <ZoomToLocation />
           <GeoJSON data={countryData} style={(features) => getCountryStyle(features?.properties?.ISO_A3)} />
           {weathers?.list?.length > 0 && weathers?.list?.map((data: any) => (
