@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap, useLeafletContext } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useGetCountryQuery, useGetWeatherQuery } from "../redux/apiSlice";
 import "leaflet/dist/images/marker-icon-2x.png";
 import countryData from "../data/countries.json";
-import { Control, LatLngBounds } from 'leaflet';
+import { LatLngBounds } from 'leaflet';
 import L from 'leaflet';
+import Control from 'react-leaflet-custom-control'
 
 const cityIds = [
   2643743,   // London, United Kingdom
@@ -95,6 +96,40 @@ const Map: React.FC = () => {
 
     return { fillColor: "lightgray" };
   };
+  // methods
+  const [click, setClick] = useState(false)
+  const getCountryStyleonClick = (countryCode: string, value: string): CountryStyle => {
+    const country = countryDataResponse?.find((data: any) => data.cca3 === countryCode);
+    if (country) {
+      const weather = weathers?.list?.find((data: any) => data.weather[0].main.toLowerCase() === value);
+      // console.log(weather)
+      if (weather) {
+        const weatherMain = weather.weather[0].main.toLowerCase();
+        switch (weatherMain) {
+          case "rain":
+            console.log("rain")
+            return { fillColor: "red" };
+          case "clear":
+            console.log("clear")
+            return { fillColor: "yellow" };
+          case "clouds":
+            console.log("cloud")
+            return { fillColor: " #000" };
+          case "snow":
+            return { fillColor: "white" };
+          case "haze":
+            return { fillColor: "#FD0000" };
+          default:
+            return { fillColor: "green" };
+        }
+      }
+    }
+
+    return { fillColor: "green" };
+  };
+
+
+
   // zoom to location
   const ZoomToLocation: React.FC = () => {
     const map = useMap();
@@ -118,12 +153,17 @@ const Map: React.FC = () => {
           {/* <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?lang=en" /> */}
           <TileLayer url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png' />
           {/* <SetBounds /> */}
-          <ZoomToLocation />
-          <GeoJSON data={countryData} style={(features) => getCountryStyle(features?.properties?.ISO_A3)} />
-          {weathers?.list?.length > 0 && weathers?.list?.map((data: any) => (
+          {/* <ZoomToLocation /> */}
+          <Control prepend position='topright'>
+            <button onClick={() => setClick(true)} style={{ position: "absolute", right: "10px" }}>Hot</button>
+          </Control>
+          <GeoJSON data={countryData} style={(features) => click ? getCountryStyleonClick(features?.properties?.ISO_A3, "clouds") : getCountryStyle(features?.properties?.ISO_A3)} />
+
+          {/* <GeoJSON data={countryData} style={(features) => click ? getCountryStyleonClick("clear") : getCountryStyle(features?.properties?.ISO_A3)} /> */}
+          {weathers?.list?.length > 0 && weathers?.list?.map((data: any, ind: number) => (
 
             Math.round(center[0]) === Math.round(data.coord.lat) && Math.round(center[1]) === Math.round(data.coord.lon) && (
-              <div style={{ background: "red" }}>
+              <div key={ind} style={{ background: "red" }}>
                 <Marker key={data.id} position={[data.coord.lat, data.coord.lon]}>
                   <Popup >
                     <div>
