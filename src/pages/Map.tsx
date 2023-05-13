@@ -49,10 +49,12 @@ const Map: React.FC = () => {
     return null;
   };
 
-  // 
+  // states
   const [center, setCenter] = useState<[number, number]>([0, 0]);
+  const [click, setClick] = useState(false)
+  const [weather, setWeather] = useState(String)
 
-  // 
+  // rtk query
   const { isLoading: loadingWeather, data: weathers } = useGetWeatherQuery({ cityId: cityIds.join(",") });
   const { isLoading: loadingCountry, data: countryDataResponse } = useGetCountryQuery([]);
 
@@ -96,36 +98,32 @@ const Map: React.FC = () => {
 
     return { fillColor: "lightgray" };
   };
-  // methods
-  const [click, setClick] = useState(false)
-  const getCountryStyleonClick = (countryCode: string, value: string): CountryStyle => {
+
+
+
+  const getCountryStyleonClick = (countryCode: string, weatherMain: string,): CountryStyle => {
     const country = countryDataResponse?.find((data: any) => data.cca3 === countryCode);
     if (country) {
-      const weather = weathers?.list?.find((data: any) => data.weather[0].main.toLowerCase() === value);
-      // console.log(weather)
-      if (weather) {
-        const weatherMain = weather.weather[0].main.toLowerCase();
-        switch (weatherMain) {
+      const weather = weathers?.list?.find((data: any) => data.sys.country === countryCode.slice(0, -1));
+      if (weather && weatherMain === weather.weather[0].main.toLowerCase()) {
+        const w = weather.weather[0].main.toLowerCase();
+        switch (w) {
           case "rain":
-            console.log("rain")
             return { fillColor: "red" };
           case "clear":
-            console.log("clear")
             return { fillColor: "yellow" };
           case "clouds":
-            console.log("cloud")
-            return { fillColor: " #000" };
+            return { fillColor: "#000" };
           case "snow":
             return { fillColor: "white" };
           case "haze":
             return { fillColor: "#FD0000" };
           default:
-            return { fillColor: "green" };
+            return { fillColor: "lightgray" };
         }
       }
     }
-
-    return { fillColor: "green" };
+    return { fillColor: "lightgray" };
   };
 
 
@@ -155,9 +153,12 @@ const Map: React.FC = () => {
           {/* <SetBounds /> */}
           {/* <ZoomToLocation /> */}
           <Control prepend position='topright'>
-            <button onClick={() => setClick(true)} style={{ position: "absolute", right: "10px" }}>Hot</button>
+            <div style={{ position: "absolute", right: "10px" }}>
+              <button onClick={() => { setClick(!click), setWeather("clear") }} >Clear</button>
+              <button onClick={() => { setClick(!click), setWeather("clouds") }} >Cloud</button>
+            </div>
           </Control>
-          <GeoJSON data={countryData} style={(features) => click ? getCountryStyleonClick(features?.properties?.ISO_A3, "clouds") : getCountryStyle(features?.properties?.ISO_A3)} />
+          <GeoJSON data={countryData} style={(features) => click ? getCountryStyleonClick(features?.properties?.ISO_A3, weather) : getCountryStyle(features?.properties?.ISO_A3)} />
 
           {/* <GeoJSON data={countryData} style={(features) => click ? getCountryStyleonClick("clear") : getCountryStyle(features?.properties?.ISO_A3)} /> */}
           {weathers?.list?.length > 0 && weathers?.list?.map((data: any, ind: number) => (
